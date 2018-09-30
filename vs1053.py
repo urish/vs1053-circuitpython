@@ -113,6 +113,24 @@ class Player:
         finally:
             self.spi.unlock()
         self.xDCS.value = True
+        
+    def setVolume(self, volume):
+        """ Sets the volume to the given value (the range is 0 to 1.0). 
+        Volume is not linear, so values below 0.75 are likely to be too quite to hear.
+        
+        Setting the volume to 0 will power down the analog part of the chip, 
+        thus saving power.
+        """
+        self.setChannelVolume(volume, volume)
+    
+    def setChannelVolume(self, left, right):
+        """ Sets the volume for each of the channels (left, right). The range is 0 to 1.0 """
+        left = max(min(1.0, left), 0)
+        right = max(min(1.0, right), 0)
+        leftVal = round((1 - left) * 255)
+        rightVal = round((1 - right) * 255)
+        print (hex(leftVal << 8 | rightVal))
+        self.writeRegister(SPI_VOL, leftVal << 8 | rightVal)
     
     def softReset(self):
         """ Soft Reset of VS10xx """
@@ -129,6 +147,6 @@ class Player:
         self.writeRegister(SPI_CLOCKF,0xC000)   # Set the clock
         self.writeRegister(SPI_AUDATA,0xBB81)   # Sample rate 48k, stereo
         self.writeRegister(SPI_BASS, 0x0055)    # Set accent
-        self.writeRegister(SPI_VOL, 0x0000)     # Set volume level
+        self.setVolume(1)
   
         self.waitForDREQ()
