@@ -129,7 +129,6 @@ class Player:
         right = max(min(1.0, right), 0)
         leftVal = round((1 - left) * 255)
         rightVal = round((1 - right) * 255)
-        print (hex(leftVal << 8 | rightVal))
         self.writeRegister(SPI_VOL, leftVal << 8 | rightVal)
     
     def softReset(self):
