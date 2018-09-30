@@ -5,6 +5,8 @@ import digitalio
 import time
 import board
 
+SPI_BAUDRATE = 2000000
+
 VS_WRITE_COMMAND = 0x02
 VS_READ_COMMAND = 0x03
 
@@ -64,13 +66,6 @@ class Player:
     def reset(self):
         self.xReset.value = False
         time.sleep(0.002); # It is a must, 2ms
-        while not self.spi.try_lock():
-            pass
-        try:
-            self.spi.configure(baudrate=100000)
-            self.spi.write(bytes([0xff]))
-        finally:
-            self.spi.unlock()
         self.xCS.value = True
         self.xDCS.value = True
         self.xReset.value = True
@@ -87,7 +82,7 @@ class Player:
             self.xDCS.value = True
             self.waitForDREQ()
             self.xCS.value = False
-            self.spi.configure(baudrate=100000)
+            self.spi.configure(baudrate=SPI_BAUDRATE)
             self.spi.write(bytes([VS_WRITE_COMMAND, addressByte, value >> 8, value & 0xFF]))
             self.xCS.value = True
         finally:
@@ -100,7 +95,7 @@ class Player:
             self.xDCS.value = True
             self.waitForDREQ()
             self.xCS.value = False
-            self.spi.configure(baudrate=100000)
+            self.spi.configure(baudrate=SPI_BAUDRATE)
             result = bytearray(4)
             self.spi.write_readinto(bytes([VS_READ_COMMAND, addressByte, 0xff, 0xff]), result)
             self.xCS.value = True
@@ -109,6 +104,7 @@ class Player:
             self.spi.unlock()
     
     def writeData(self, buf):
+        self.waitForDREQ()
         self.xDCS.value = False
         while not self.spi.try_lock():
             pass
@@ -133,6 +129,6 @@ class Player:
         self.writeRegister(SPI_CLOCKF,0xC000)   # Set the clock
         self.writeRegister(SPI_AUDATA,0xBB81)   # Sample rate 48k, stereo
         self.writeRegister(SPI_BASS, 0x0055)    # Set accent
-        self.writeRegister(SPI_VOL, 0x4040)     # Set volume level
+        self.writeRegister(SPI_VOL, 0x0000)     # Set volume level
   
         self.waitForDREQ()
