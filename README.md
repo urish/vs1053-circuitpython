@@ -18,8 +18,7 @@ player = vs1053.Player(
 )
 
 inputFile = open('test.mp3', mode='rb')
-buf = inputFile.read(32)
-while buf:
+buf = bytearray(32)
+while inputFile.readinto(buf):
     player.writeData(buf)
-    buf = inputFile.read(32)
 ```
